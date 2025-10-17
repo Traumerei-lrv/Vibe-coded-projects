@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart.js Web Chart Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #fdf6ee;
+            color: #3b2f2f;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #7b5e57;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1rem;
+            color: #a17a69;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .panel {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px rgba(123, 94, 87, 0.1); /* Fixed incomplete rgba */
+            position: relative;
+        }
+
+        .panel h2 {
+            font-size: 1.5rem;
+            color: #7b5e57;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #3b2f2f;
+            font-size: 0.9rem;
+        }
+
+        input[type="text"],
+        input[type="color"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e8d5c4;
+            border-radius: 0.5rem;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            color: #3b2f2f;
+            transition: all 0.3s ease;
+            background: #fdf6ee;
+        }
+
+        input[type="color"] {
+            height: 45px;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+
+        input[type="text"]:focus,
+        input[type="color"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #7b5e57;
+            background: white;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #7b5e57;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5d4842;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(123, 94, 87, 0.3);
+        }
+
+        .btn-secondary {
+            background: #a17a69;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #8a6555;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(161, 122, 105, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .download-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .download-group select {
+            width: auto;
+            padding: 0.75rem 1rem;
+        }
+
+        #chartCanvas {
+            max-width: 100%;
+            height: 400px;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .alert-error {
+            background: #ffe0e0;
+            color: #c53030;
+            border: 1px solid #ff9999;
+        }
+
+        .alert-success {
+            background: #e0ffe0;
+            color: #30c530;
+            border: 1px solid #99ff99;
+        }
+
+        .help-text {
+            font-size: 0.8rem;
+            color: #a17a69;
+            margin-top: 0.25rem;
+        }
+
+        .dataset-entry {
+            background: #fdf6ee;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e8d5c4;
+        }
+
+        .dataset-entry h4 {
+            color: #7b5e57;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .add-dataset-btn {
+            padding: 0.5rem 1rem;
+            background: #e8d5c4;
+            color: #7b5e57;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .add-dataset-btn:hover {
+            background: #d4c0ad;
+        }
+
+        @media (max-width: 968px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            color: #a17a69;
+            text-align: center;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Chart Generator with Chart.js</h1>
+        <p>Create beautiful, interactive charts with ease</p>
+    </header>
+
+    <div class="container">
+        <!-- Input Panel -->
+        <div class="panel">
+            <h2>Chart Configuration</h2>
+            
+            <div class="alert alert-error" id="errorAlert"></div>
+            
+            <div class="form-group">
+                <label for="chartType">Chart Type</label>
+                <select id="chartType">
+                    <option value="">Select a chart type...</option>
+                    <option value="bar">Bar Chart</option>
+                    <option value="line">Line Chart</option>
+                    <option value="pie">Pie Chart</option>
+                    <option value="doughnut">Doughnut Chart</option>
+                    <option value="scatter">Scatter Chart</option>
+                    <option value="bubble">Bubble Chart</option>
+                    <option value="radar">Radar Chart</option>
+                    <option value="polarArea">Polar Area Chart</option>
+                    <option value="mixed">Mixed Chart</option>
+                </select>
+            </div>
+
+            <div id="dynamicInputs"></div>
+
+            <div class="button-group">
+                <button class="btn btn-secondary" id="clearBtn" style="display:none;">Clear</button>
+                <button class="btn btn-primary" id="generateBtn" style="display:none;">Generate Chart</button>
+                <button class="btn btn-secondary" id="undoBtn" style="display:none;">Undo</button>
+            </div>
+        </div>
+
+        <!-- Output Panel -->
+        <div class="panel">
+            <h2>Chart Preview</h2>
+            
+            <div id="chartOutput">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 3v18h18M7 16l4-4 4 4 6-6"/>
+                    </svg>
+                    <p>Select a chart type and configure your data to generate a preview</p>
+                </div>
+            </div>
+
+            <div class="button-group" id="downloadGroup" style="display:none;">
+                <div class="download-group">
+                    <select id="downloadFormat">
+                        <option value="png">PNG</option>
+                        <option value="jpg">JPG</option>
+                        <option value="svg">SVG</option>
+                    </select>
+                    <button class="btn btn-secondary" id="downloadBtn">Download</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function hexToRgba(hex, alpha = 1) {
+            // Remove the hash if present
+            hex = hex.replace('#', '');
+            
+            // Convert hex to RGB
+            const r = parseInt(hex.slice(0, 2), 16);
+            const g = parseInt(hex.slice(2, 4), 16);
+            const b = parseInt(hex.slice(4, 6), 16);
+            
+            // Return the rgba string
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        let currentChart = null;
+        const chartState = {
+            type: '',
+            data: {}
+        };
+
+        // Add these variables at the top with other state variables
+        let previousState = null;
+        let previousInputs = null;
+
+        // Chart type input templates
+        const inputTemplates = {
+            bar: `
+                <div class="form-group">
+                    <label for="chartTitle">Chart Title</label>
+                    <input type="text" id="chartTitle" placeholder="Enter chart title">
+                </div>
+                <div class="form-group">
+                    <label for="labels">Labels (comma-separated)</label>
+                    <input type="text" id="labels" placeholder="e.g., January, February, March">
+                    <div class="help-text">Separate labels with commas</div>
+                </div>
+                <div class="form-group">
+                    <label for="dataValues">Data Values (comma-separated)</label>
+                    <input type="text" id="dataValues" placeholder="e.g., 65, 59, 80">
+                    <div class="help-text">Enter numbers separated by commas</div>
+                </div>
+                <div class="form-group">
+                    <label for="bgColor">Background Color</label>
+                    <input type="color" id="bgColor" value="#7b5e57">
+                </div>
+                <div class="form-group">
+                    <label for="borderColor">Border Color</label>
+                    <input type="color" id="borderColor" value="#5d4842">
+                </div>
+            `,
+            line: `
+                <div class="form-group">
+                    <label for="chartTitle">Chart Title</label>
+                    <input type="text" id="chartTitle" placeholder="Enter chart title">
+                </div>
+                <div class="form-group">
+                    <label for="labels">Labels (comma-separated)</label>
+                    <input type="text" id="labels" placeholder="e.g., January, February, March">
+                    <div class="help-text">Separate labels with commas</div>
+                </div>
+                <div class="form-group">
+                    <label for="dataValues">Data Values (comma-separated)</label>
+                    <input type="text" id="dataValues" placeholder="e.g., 65, 59, 80">
+                    <div class="help-text">Enter numbers separated by commas</div>
+                </div>
+                <div class="form-group">
+                    <label for="lineColor">Line Color</label>
+                    <input type="color" id="lineColor" value="#7b5e57">
+                </div>
+                <div class="form-group">
+                    <label for="fillColor">Fill Color</label>
+                    <input type="color" id="fillColor" value="#d4c0ad">
+                </div>
+                <div class="form-group">
+                    <label for="tension">Line Tension (0-1)</label>
+                    <input type="text" id="tension" value="0.4" placeholder="e.g., 0.4">
+                </div>
+            `,
+            pie: `
+                <div class="form-group">
+                    <label for="chartTitle">Chart Title</label>
+                    <input type="text" id="chartTitle" placeholder="Enter chart title">
+                </div>
+                <div class="form-group">
+                    <label for="labels">Labels (comma-separated)</label>
+                    <input type="text" id="labels" placeholder="e.g., Red, Blue, Yellow">
+                    <div class="help-text">Separate labels with commas</div>
+                </div>
+                <div class="form-group">
+                    <label for="dataValues">Data Values (comma-separated)</label>
+                    <input type="text" id="dataValues" placeholder="e.g., 300, 50, 100">
+                    <div class="help-text">Enter numbers separated by commas</div>
+                </div>
+                <div class="form-group">
+                    <label for="colors">Slice Colors (comma-separated hex codes)</label>
+                    <input type="text" id="colors" value="#7b5e57,#a17a69,#d4c0ad,#8b7365,#b39d8f" placeholder="e.g., #7b5e57,#a17a69,#d4c0ad">
+                    <div class="help-text">One color per slice, separated by commas</div>
+                </div>
+            `,
+            doughnut: `
+                <div class="form-group">
+                    <label for="chartTitle">Chart Title</label>
+                    <input type="text" id="chartTitle" placeholder="Enter chart title">
+                </div>
+                <div class="form-group">
+                    <label for="labels">Labels (comma-separated)</label>
+                    <input type="text" id="labels" placeholder="e.g., Red, Blue, Yellow">
+                    <div class="help-text">Separate labels with commas</div>
+                </div>
+                <div class="form-group">
+                    <label for="dataValues">Data Values (comma-separated)</label>
+                    <input type="text" id="dataValues" placeholder="e.g., 300, 50, 100">
+                    <div class="help-text">Enter numbers separated by commas</div>
+                </div>
+                <div class="form-group">
+                    <label for="colors">Slice Colors (comma-separated hex codes)</label>
+                    <input type="text" id="colors" value="#7b5e57,#a17a69,#d4c0ad,#8b7365,#b39d8f" placeholder="e.g., #7b5e57,#a17a69,#d4c0ad">
+                    <div class="help-text">One color per slice, separated by commas</div>
+                </div>
+            `,
+            scatter: `
+                <div class="form-group">
+                    <label for="chartTitle">Chart Title</label>
+                    <input type="text" id="chartTitle" placeholder="Enter chart title">
+                </div>
+                <div class="form-group">
+                    <label for="scatterData">Data Points (x,y pairs separated by semicolons)</label>
+                    <textarea id="scatterData" placeholder="e.g., 10,20; 15,25; 20,30"></textarea>
+                    <div class="help-text">Format: x1,y1; x2,y2; x3,y3</div>
+                </div>
+                <div class="form-group">
+                    <label for="pointColor">Point Color</label>
+                    <input type="color" id="pointColor" value="#7b5e57">
+                </div>
+                <div class="form-group">
+                    <label for="pointBorderColor">Point Border Color</label>
+                    <input type="color" id="pointBorderColor" value="#5d4842">
+                </div>
+            `,
+            bubble: `
+                <div class="form-group">
+                    <label for="chartTitle">Chart Title</label>
+                    <input type="text" id="chartTitle" placeholder="Enter chart title">
+                </div>
+                <div class="form-group">
+                    <label for="bubbleData">Data Points (x,y,r separated by semicolons)</label>
+                    <textarea id="bubbleData" placeholder="e.g., 10,20,5; 15,25,10; 20,30,15"></textarea>
+                    <div class="help-text">Format: x1,y1,radius1; x2,y2,radius2</div>
+                </div>
+                <div class="form-group">
+                    <label for="bubbleColor">Bubble Color</label>
+                    <input type="color" id="bubbleColor" value="#7b5e57">
+                </div>
+                <div class="form-group">
+                    <label for="bubbleBorderColor">Bubble Border Color</label>
+                    <input type="color" id="bubbleBorderColor" value="#5d4842">
+                </div>
+            `,
+            radar: `
+                <div class="form-group">
+                    <label for="chartTitle">Chart Title</label>
+                    <input type="text" id="chartTitle" placeholder="Enter chart title">
+                </div>
+                <div class="form-group">
+                    <label for="labels">Category Labels (comma-separated)</label>
+                    <input type="text" id="labels" placeholder="e.g., Speed, Strength, Stamina">
+                    <div class="help-text">Separate categories with commas</div>
+                </div>
+                <div class="form-group">
+                    <label for="dataValues">Data Values (comma-separated)</label>
+                    <input type="text" id="dataValues" placeholder="e.g., 65, 59, 90">
+                    <div class="help-text">Enter numbers separated by commas</div>
+                </div>
+                <div class="form-group">
+                    <label for="bgColor">Fill Color</label>
+                    <input type="color" id="bgColor" value="#a17a69">
+                </div>
+                <div class="form-group">
+                    <label for="borderColor">Border Color</label>
+                    <input type="color" id="borderColor" value="#7b5e57">
+                </div>
+            `,
+            polarArea: `
+                <div class="form-group">
+                    <label for="chartTitle">Chart Title</label>
+                    <input type="text" id="chartTitle" placeholder="Enter chart title">
+                </div>
+                <div class="form-group">
+                    <label for="labels">Labels (comma-separated)</label>
+                    <input type="text" id="labels" placeholder="e.g., Red, Green, Yellow">
+                    <div class="help-text">Separate labels with commas</div>
+                </div>
+                <div class="form-group">
+                    <label for="dataValues">Data Values (comma-separated)</label>
+                    <input type="text" id="dataValues" placeholder="e.g., 11, 16, 7">
+                    <div class="help-text">Enter numbers separated by commas</div>
+                </div>
+                <div class="form-group">
+                    <label for="colors">Segment Colors (comma-separated hex codes)</label>
+                    <input type="text" id="colors" value="#7b5e57,#a17a69,#d4c0ad,#8b7365,#b39d8f" placeholder="e.g., #7b5e57,#a17a69,#d4c0ad">
+                    <div class="help-text">One color per segment, separated by commas</div>
+                </div>
+            `,
+            mixed: `
+                <div class="form-group">
+                    <label for="chartTitle">Chart Title</label>
+                    <input type="text" id="chartTitle" placeholder="Enter chart title">
+                </div>
+                <div class="form-group">
+                    <label for="labels">Labels (comma-separated)</label>
+                    <input type="text" id="labels" placeholder="e.g., January, February, March">
+                    <div class="help-text">Separate labels with commas</div>
+                </div>
+                <div id="datasetsContainer"></div>
+                <button type="button" class="add-dataset-btn" id="addDatasetBtn">+ Add Dataset</button>
+            `
+        };
+
+        // Chart type selection
+        $('#chartType').on('change', function() {
+            const type = $(this).val();
+            chartState.type = type;
+            
+            if (type) {
+                $('#dynamicInputs').html(inputTemplates[type]);
+                $('#generateBtn').show();
+                $('#clearBtn').show();
+                $('#undoBtn').show();
+                
+                // Initialize mixed chart dataset functionality
+                if (type === 'mixed') {
+                    addMixedDataset();
+                }
+            } else {
+                $('#dynamicInputs').html('');
+                $('#generateBtn').hide();
+                $('#clearBtn').hide();
+                $('#undoBtn').hide();
+            }
+            
+            hideError();
+        });
+
+        // Add dataset for mixed chart
+        let datasetCount = 0;
+        $(document).on('click', '#addDatasetBtn', function() {
+            addMixedDataset();
+        });
+
+        function addMixedDataset() {
+            datasetCount++;
+            const html = `
+                <div class="dataset-entry" data-dataset-id="${datasetCount}">
+                    <h4>Dataset ${datasetCount}</h4>
+                    <div class="form-group">
+                        <label>Dataset Type</label>
+                        <select class="dataset-type">
+                            <option value="bar">Bar</option>
+                            <option value="line">Line</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Label</label>
+                        <input type="text" class="dataset-label" placeholder="e.g., Sales">
+                    </div>
+                    <div class="form-group">
+                        <label>Data Values (comma-separated)</label>
+                        <input type="text" class="dataset-values" placeholder="e.g., 65, 59, 80">
+                    </div>
+                    <div class="form-group">
+                        <label>Color</label>
+                        <input type="color" class="dataset-color" value="#7b5e57">
+                    </div>
+                </div>
+            `;
+            $('#datasetsContainer').append(html);
+        }
+
+        // Add undo functionality
+        $('#undoBtn').on('click', function() {
+            if (previousInputs) {
+                // Store current state before undoing
+                const currentInputs = {};
+                $('input, textarea, select').each(function() {
+                    currentInputs[$(this).attr('id')] = $(this).val();
+                });
+
+                // Restore previous state
+                for (let id in previousInputs) {
+                    $(`#${id}`).val(previousInputs[id]);
+                }
+
+                // Update chart if it exists
+                if (currentChart && previousState) {
+                    currentChart.destroy();
+                    renderChart(previousState.type, previousState.config);
+                }
+            } else {
+                showError('Nothing to undo');
+            }
+        });
+
+        // Generate chart
+        $('#generateBtn').on('click', function() {
+            const type = $('#chartType').val();
+            
+            try {
+                // Store current state before generating new chart
+                previousInputs = {};
+                $('input, textarea, select').each(function() {
+                    previousInputs[$(this).attr('id')] = $(this).val();
+                });
+
+                if (currentChart) {
+                    previousState = {
+                        type: chartState.type,
+                        config: JSON.parse(JSON.stringify(currentChart.config))
+                    };
+                    currentChart.destroy();
+                }
+
+                const chartData = prepareChartData(type);
+                
+                renderChart(type, chartData);
+                hideError();
+                $('#downloadGroup').show();
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+
+        function prepareChartData(type) {
+            const title = $('#chartTitle').val() || 'Chart';
+            
+            switch(type) {
+                case 'bar':
+                case 'line':
+                    return prepareBasicChart(type, title);
+                case 'pie':
+                case 'doughnut':
+                    return preparePieChart(type, title);
+                case 'scatter':
+                    return prepareScatterChart(title);
+                case 'bubble':
+                    return prepareBubbleChart(title);
+                case 'radar':
+                    return prepareRadarChart(title);
+                case 'polarArea':
+                    return preparePolarChart(title);
+                case 'mixed':
+                    return prepareMixedChart(title);
+                default:
+                    throw new Error('Invalid chart type');
+            }
+        }
+
+        function prepareBasicChart(type, title) {
+            const labels = $('#labels').val().split(',').map(s => s.trim()).filter(s => s);
+            const values = $('#dataValues').val().split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+            
+            if (labels.length === 0 || values.length === 0) {
+                throw new Error('Please provide labels and data values');
+            }
+            
+            let bgColor, borderColor;
+            
+            if (type === 'bar') {
+                bgColor = hexToRgba($('#bgColor').val(), 0.8);
+                borderColor = $('#borderColor').val();
+            } else {
+                bgColor = hexToRgba($('#fillColor').val(), 0.2);
+                borderColor = $('#lineColor').val();
+            }
+            
+            return {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: title,
+                        data: values,
+                        backgroundColor: bgColor,
+                        borderColor: borderColor,
+                        borderWidth: 2,
+                        tension: type === 'line' ? (parseFloat($('#tension').val()) || 0.4) : 0,
+                        fill: type === 'line'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title,
+                            font: { size: 18, weight: 'bold' },
+                            color: '#7b5e57'
+                        },
+                        legend: { display: true }
+                    }
+                }
+            };
+        }
+
+        function preparePieChart(type, title) {
+            const labels = $('#labels').val().split(',').map(s => s.trim()).filter(s => s);
+            const values = $('#dataValues').val().split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+            
+            if (labels.length === 0 || values.length === 0) {
+                throw new Error('Please provide labels and data values');
+            }
+            
+            const colors = generateColors(labels.length);
+            
+            return {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title,
+                            font: { size: 18, weight: 'bold' },
+                            color: '#7b5e57'
+                        },
+                        legend: { display: true, position: 'right' }
+                    }
+                }
+            };
+        }
+
+        function prepareScatterChart(title) {
+            const dataStr = $('#scatterData').val();
+            if (!dataStr) throw new Error('Please provide scatter data');
+            
+            const points = dataStr.split(';').map(pair => {
+                const [x, y] = pair.split(',').map(n => parseFloat(n.trim()));
+                return { x, y };
+            }).filter(p => !isNaN(p.x) && !isNaN(p.y));
+            
+            if (points.length === 0) throw new Error('Invalid scatter data format');
+            
+            return {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: title,
+                        data: points,
+                        backgroundColor: $('#pointColor').val() || '#7b5e57'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title,
+                            font: { size: 18, weight: 'bold' },
+                            color: '#7b5e57'
+                        }
+                    }
+                }
+            };
+        }
+
+        function prepareBubbleChart(title) {
+            const dataStr = $('#bubbleData').val();
+            if (!dataStr) throw new Error('Please provide bubble data');
+            
+            const points = dataStr.split(';').map(trio => {
+                const [x, y, r] = trio.split(',').map(n => parseFloat(n.trim()));
+                return { x, y, r };
+            }).filter(p => !isNaN(p.x) && !isNaN(p.y) && !isNaN(p.r));
+            
+            if (points.length === 0) throw new Error('Invalid bubble data format');
+            
+            return {
+                type: 'bubble',
+                data: {
+                    datasets: [{
+                        label: title,
+                        data: points,
+                        backgroundColor: $('#bubbleColor').val() || 'rgba(123, 94, 87, 0.6)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title,
+                            font: { size: 18, weight: 'bold' },
+                            color: '#7b5e57'
+                        }
+                    }
+                }
+            };
+        }
+
+        function prepareRadarChart(title) {
+            const labels = $('#labels').val().split(',').map(s => s.trim()).filter(s => s);
+            const values = $('#dataValues').val().split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+            
+            if (labels.length === 0 || values.length === 0) {
+                throw new Error('Please provide labels and data values');
+            }
+            
+            return {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: title,
+                        data: values,
+                        backgroundColor: $('#bgColor').val() || 'rgba(123, 94, 87, 0.2)',
+                        borderColor: '#7b5e57',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title,
+                            font: { size: 18, weight: 'bold' },
+                            color: '#7b5e57'
+                        }
+                    }
+                }
+            };
+        }
+
+        function preparePolarChart(title) {
+            const labels = $('#labels').val().split(',').map(s => s.trim()).filter(s => s);
+            const values = $('#dataValues').val().split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+            
+            if (labels.length === 0 || values.length === 0) {
+                throw new Error('Please provide labels and data values');
+            }
+            
+            const colors = generateColors(labels.length);
+            
+            return {
+                type: 'polarArea',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title,
+                            font: { size: 18, weight: 'bold' },
+                            color: '#7b5e57'
+                        }
+                    }
+                }
+            };
+        }
+
+        function prepareMixedChart(title) {
+            const labels = $('#labels').val().split(',').map(s => s.trim()).filter(s => s);
+            if (labels.length === 0) throw new Error('Please provide labels');
+            
+            const datasets = [];
+            $('.dataset-entry').each(function() {
+                const type = $(this).find('.dataset-type').val();
+                const label = $(this).find('.dataset-label').val();
+                const values = $(this).find('.dataset-values').val().split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+                const color = $(this).find('.dataset-color').val();
+                
+                if (values.length > 0) {
+                    datasets.push({
+                        type: type,
+                        label: label || 'Dataset',
+                        data: values,
+                        backgroundColor: type === 'bar' ? color : 'rgba(123, 94, 87, 0.1)',
+                        borderColor: color,
+                        borderWidth: 2,
+                        fill: type === 'line'
+                    });
+                }
+            });
+            
+            if (datasets.length === 0) throw new Error('Please add at least one dataset');
+            
+            return {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title,
+                            font: { size: 18, weight: 'bold' },
+                            color: '#7b5e57'
+                        }
+                    }
+                }
+            };
+        }
+
+        function renderChart(type, config) {
+            const output = `
+                <div class="chart-container">
+                    <canvas id="chartCanvas"></canvas>
+                </div>
+            `;
+            $('#chartOutput').html(output);
+            
+            const ctx = document.getElementById('chartCanvas').getContext('2d');
+            currentChart = new Chart(ctx, config);
+        }
+
+        function generateColors(count) {
+            const baseColors = [
+                'rgba(123, 94, 87, 0.8)',
+                'rgba(161, 122, 105, 0.8)',
+                'rgba(212, 192, 173, 0.8)',
+                'rgba(139, 115, 101, 0.8)',
+                'rgba(179, 157, 143, 0.8)'
+            ];
+            
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+                colors.push(baseColors[i % baseColors.length]);
+            }
+            return colors;
+        }
+
+        function showError(message) {
+            $('#errorAlert').text(message).fadeIn();
+        }
+
+        function hideError() {
+            $('#errorAlert').fadeOut();
+        }
+
+        // Download functionality
+        $('#downloadBtn').on('click', function() {
+            if (!currentChart) {
+                showError('Please generate a chart first');
+                return;
+            }
+            
+            const format = $('#downloadFormat').val();
+            const canvas = document.getElementById('chartCanvas');
+            const title = $('#chartTitle').val() || 'chart';
+            const filename = `${title.replace(/\s+/g, '_')}.${format}`;
+            
+            if (format === 'svg') {
+                // SVG export - Note: Chart.js doesn't natively support SVG
+                // We'll convert canvas to SVG-like format
+                showError('SVG export requires additional library. Downloading as PNG instead.');
+                downloadCanvasImage(canvas, filename.replace('.svg', '.png'), 'png');
+            } else {
+                downloadCanvasImage(canvas, filename, format);
+            }
+        });
+
+        function downloadCanvasImage(canvas, filename, format) {
+            const mimeType = format === 'jpg' ? 'image/jpeg' : 'image/png';
+            
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+            }, mimeType, 0.95);
+        }
+
+        // Add clear button functionality
+        $('#clearBtn').on('click', function() {
+            // Store current state before clearing
+            previousInputs = {};
+            $('input, textarea, select').each(function() {
+                previousInputs[$(this).attr('id')] = $(this).val();
+            });
+
+            if (currentChart) {
+                previousState = {
+                    type: chartState.type,
+                    config: JSON.parse(JSON.stringify(currentChart.config))
+                };
+            }
+
+            // Clear all input fields
+            $('input[type="text"]').val('');
+            $('input[type="number"]').val('');
+            $('textarea').val('');
+            
+            // Reset color inputs to default values
+            $('input[type="color"]').each(function() {
+                $(this).val('#7b5e57');
+            });
+            
+            // Reset select elements to first option
+            $('select').each(function() {
+                $(this).prop('selectedIndex', 0);
+            });
+            
+            hideError();
+            
+            // For mixed charts, clear all datasets except the first one
+            if ($('#chartType').val() === 'mixed') {
+                const firstDataset = $('.dataset-entry').first();
+                $('#datasetsContainer').html('').append(firstDataset);
+                firstDataset.find('input').val('');
+                datasetCount = 1;
+            }
+        });
+    </script>
+</body>
+</html>
